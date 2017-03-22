@@ -1,0 +1,56 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 24
+    buildToolsVersion "24.0.3"
+    defaultConfig {
+        applicationId "wk.shop"
+        minSdkVersion 15
+        targetSdkVersion 24
+        versionCode 1
+        versionName "1.0"
+        manifestPlaceholders = [
+                GETUI_APP_ID    : "nfFiHd4Rq49jmZMVwXycl5",
+                GETUI_APP_KEY   : "KVLMuiBH5Y6FmRV7lTfEp7",
+                GETUI_APP_SECRET: "XrOxYEyUsJAjGMWXluOVp",
+                PACKAGE_NAME    : applicationId
+        ]
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'me.tatarka:gradle-retrolambda:3.3.0'
+    }
+}
+apply plugin: 'me.tatarka.retrolambda'
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile 'com.android.support:appcompat-v7:24.1.0'
+    compile project(':afinal')
+    compile files('libs/AMap3DMap_4.1.2_AMapNavi_1.9.3_AMapSearch_3.6.0_AMapLocation_3.1.0_20161114.jar')
+    compile files('libs/Amap_2DMap_V2.9.2_20161026.jar')
+    compile files('libs/json_simple-1.1.jar')
+    compile files('libs/mpandroidchartlibrary-2-1-4.jar')
+    compile files('libs/Msc.jar')
+    compile 'com.tencent.bugly:crashreport:latest.release'
+    compile 'cn.trinea.android.common:trinea-android-common:4.2.15'
+    compile 'com.getui:sdk:+'
+    compile 'com.jakewharton:butterknife:7.0.1'
+    compile 'me.iwf.photopicker:PhotoPicker:0.9.0@aar'
+    compile 'com.android.support:design:24.2.1'
+}
