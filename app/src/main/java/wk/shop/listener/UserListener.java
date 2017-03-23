@@ -60,10 +60,10 @@ public class UserListener implements UserMView {
     public void doLogin(String name, String pwd) {
         Map<String, String> map = new HashMap<>();
         map.put("username", name);
-        map.put("userpwd", pwd);
-        map.put("token", "");
-        map.put("type", "1");
-        map.put("clientid", Utils.getCache(Config.cid));
+        map.put("password", pwd);
+//        map.put("token", "");
+//        map.put("type", "1");
+//        map.put("clientid", Utils.getCache(Config.cid));
         HttpUtil.load()
                 .userInfo(map)
                 .subscribeOn(Schedulers.io())
@@ -80,14 +80,6 @@ public class UserListener implements UserMView {
                             map_cache.put(Config.gid, model.getGid());
                             map_cache.put(Config.city_id, model.getCityid());
                             Utils.putCache(map_cache);
-                            switch (model.getIsApproved()) {
-                                case "0":
-                                    Utils.putBooleanCache("istg", true);
-                                    break;
-                                default:
-                                    Utils.putBooleanCache("istg", false);
-                                    break;
-                            }
                             break;
                     }
                 }, throwable -> {
