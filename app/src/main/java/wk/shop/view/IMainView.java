@@ -1,6 +1,8 @@
 package wk.shop.view;
 
 import wk.shop.model.MessageModel;
+import wk.shop.model.ShopInfoModel;
+import wk.shop.model.ShopOrderModel;
 
 /**
  * Created by Administrator on 2016/10/13.
@@ -27,5 +29,7 @@ public interface IMainView {
     //改变骑士状态
     void changeQsState(String result);
 
-    void userDetail(MessageModel model);
+    void userDetail(ShopInfoModel model);
+
+    void orderList(ShopOrderModel orders);
 }

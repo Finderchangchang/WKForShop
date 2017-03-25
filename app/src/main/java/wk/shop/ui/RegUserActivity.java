@@ -151,11 +151,11 @@ public class RegUserActivity extends BaseActivity implements IReg {
     @Override
     public void getRegUserResult(boolean result, String message) {
         if (result) {//成功
-            Utils.IntentPost(MainActivitys.class);
+            Utils.IntentPost(MainActivity.class);
             if (("账号注册").equals(title)) {
                 Utils.putBooleanCache("istg", false);
             }
-            LoginActivitys.mInstance.finish();
+            LoginActivity.mInstance.finish();
             finish();
         } else {//注册失败
             ToastShort(message);

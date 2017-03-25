@@ -5,14 +5,18 @@ import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.widget.AutoCompleteTextView;
+import android.support.v7.app.AlertDialog;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.igexin.sdk.PushManager;
 
 import net.tsz.afinal.annotation.view.CodeNote;
+import net.tsz.afinal.view.TitleBar;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
 import wk.shop.R;
 import wk.shop.base.BaseActivity;
 import wk.shop.listener.UserListener;
@@ -20,69 +24,70 @@ import wk.shop.method.Utils;
 import wk.shop.model.Config;
 import wk.shop.view.ILoginView;
 
+import static wk.shop.R.id.login_btn;
+
 /**
- * 登录页面
- * Created by Administrator on 2016/10/13.
+ * Created by Administrator on 2016/12/12.
  */
 
 public class LoginActivity extends BaseActivity implements ILoginView {
-    public static LoginActivity mInstance;
-    @CodeNote(id = R.id.user_name_tv)
-    AutoCompleteTextView user_name_tv;
-    @CodeNote(id = R.id.pwd_tv)
-    TextView pwd_tv;
-    @CodeNote(id = R.id.login_btn)
-    Button login_btn;
+    @CodeNote(id = R.id.title_bar)
+    TitleBar title_bar;
+    @Bind(R.id.tel_et)
+    EditText telEt;
+    @Bind(R.id.pwd_et)
+    EditText pwdEt;
+    @Bind(login_btn)
+    Button loginBtn;
+    @Bind(R.id.find_pwd_tv)
+    TextView findPwdTv;
     UserListener listener;
     String user_id;
+    public static LoginActivity mInstance;
 
     @Override
     public void initViews() {
-        setContentView(R.layout.activity_login);
-        mInstance = this;
+        setContentView(R.layout.ac_login);
+        ButterKnife.bind(this);
         listener = new UserListener(this);
+        mInstance = this;
     }
 
+    AlertDialog.Builder builder;
+
+    /**
+     *
+     */
     @Override
     public void initEvents() {
+        builder = new AlertDialog.Builder(LoginActivity.mInstance);
+        title_bar.setLeftClick(() -> finish());
+        title_bar.setRightClick(() -> Utils.IntentPost(RegUserActivity.class, intent -> intent.putExtra("state", "账号注册")));
+        loginBtn.setOnClickListener(v -> {
+            String tel = telEt.getText().toString().trim();
+            String pwd = pwdEt.getText().toString().trim();
+            if (("").equals(tel)) {
+                ToastShort("手机号码不能为空");
+            } else if (("").equals(pwd)) {
+                ToastShort("密码不能为空");
+            } else {
+                listener.doLogin(tel, pwd);
+            }
+        });
+        findPwdTv.setOnClickListener(v -> Utils.IntentPost(RegUserActivity.class, intent -> intent.putExtra("state", "找回密码")));
         PushManager.getInstance().initialize(this);
-        if (ContextCompat.checkSelfPermission(LoginActivity.mInstance,
+        if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(LoginActivity.mInstance,
-                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-                    0);
+            builder.setTitle("提示");
+            builder.setMessage("请允许以下权限，否则软件会出现崩溃！！");
+            builder.setNegativeButton("确定", (dialog, which) -> {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 0);
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 0);
+            });
+            builder.show();
         } else {
             load();
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case 0:
-                load();
-                break;
-        }
-    }
-
-    private void load() {
-        user_id = Utils.getCache(Config.user_id);
-        if (("").equals(user_id) || user_id == null) {
-            login_btn.setOnClickListener(v -> {
-                String name = user_name_tv.getText().toString().trim();
-                String pwd = pwd_tv.getText().toString().trim();
-                if (("").equals(name)) {
-                    ToastShort("用户名不能为空");
-                } else if (("").equals(pwd)) {
-                    ToastShort("密码不能为空");
-                } else {
-                    listener.doLogin(name, pwd);
-                }
-            });
-        } else {//记住当前账号，直接跳转到登录页面
-            Utils.IntentPost(MainActivity.class);
-            mInstance.finish();
         }
     }
 
@@ -90,9 +95,31 @@ public class LoginActivity extends BaseActivity implements ILoginView {
     public void loginResult(String msg) {
         if (msg == "") {//登录成功
             Utils.IntentPost(MainActivity.class);
-            mInstance.finish();
+            finish();
         } else {
             ToastShort(msg);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case 0:
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    load();
+                } else {
+                    finish();
+                }
+                break;
+        }
+    }
+
+    private void load() {
+        user_id = Utils.getCache(Config.user_id);
+        if (!("").equals(user_id)) {
+            Utils.IntentPost(MainActivity.class);
+            finish();
         }
     }
 }

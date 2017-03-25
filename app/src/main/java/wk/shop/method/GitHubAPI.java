@@ -11,6 +11,8 @@ import wk.shop.model.ListModel;
 import wk.shop.model.MessageModel;
 import wk.shop.model.NormalMessageModel;
 import wk.shop.model.OrderModel;
+import wk.shop.model.ShopInfoModel;
+import wk.shop.model.ShopOrderModel;
 import wk.shop.model.UpdateModel;
 
 /**
@@ -19,6 +21,15 @@ import wk.shop.model.UpdateModel;
 
 public interface GitHubAPI {
     String url = "app/Android/deliver/";
+    String normal_url = "app/shop/";
+
+    //根据用户id获得用户信息
+    @GET(normal_url + "getShopInfo.aspx")
+    Observable<ShopInfoModel> getUserDetailById(@Query("shopid") String map);
+
+    //获得今日订单量以及产生的总钱数
+    @GET(normal_url + "GetSaleMoney.aspx")
+    Observable<ShopOrderModel> getOrderList(@QueryMap Map<String, String> map);
 
     @GET("app/shop/shoplogin.aspx")
     Observable<NormalMessageModel> userInfo(@QueryMap Map<String, String> map);
@@ -65,10 +76,6 @@ public interface GitHubAPI {
     //根据用户ID获得订单信息
     @GET(url + "GetOrderListByUserId.aspx")
     Observable<ListModel> getOrders(@QueryMap Map<String, String> map);
-
-    //根据用户id获得用户信息
-    @GET(url + "DeliverZhangHuZhongXin.aspx")
-    Observable<MessageModel> getUserDetailById(@Query("DataId") String map);
 
     //根据订单编号获得订单详细信息
     @GET(url + "GetOrderDetailByOrderId.aspx")

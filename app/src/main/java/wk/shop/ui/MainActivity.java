@@ -1,7 +1,6 @@
 package wk.shop.ui;
 
 import android.Manifest;
-import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -17,90 +16,143 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
-import android.support.design.widget.TabLayout;
+import android.support.annotation.NonNull;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v4.view.ViewPager;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.NotificationCompat;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
+import com.bumptech.glide.Glide;
 
-import net.tsz.afinal.annotation.view.CodeNote;
+import net.tsz.afinal.view.TitleBar;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
 import cn.trinea.android.common.util.PreferencesUtils;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import wk.shop.R;
 import wk.shop.base.BaseActivity;
 import wk.shop.base.BaseApplication;
+import wk.shop.listener.MainFragListener;
 import wk.shop.listener.MainListener;
+import wk.shop.method.CommonAdapter;
+import wk.shop.method.CommonViewHolder;
+import wk.shop.method.GlideCircleTransform;
 import wk.shop.method.HttpUtil;
 import wk.shop.method.Utils;
 import wk.shop.model.Config;
+import wk.shop.model.ListModel;
 import wk.shop.model.MessageModel;
+import wk.shop.model.OrderModel;
+import wk.shop.model.ShopInfoModel;
+import wk.shop.model.ShopOrderModel;
+import wk.shop.view.IMainFragView;
 import wk.shop.view.IMainView;
 
-import static wk.shop.base.BaseApplication.mLocationClient;
-
 /**
- * 给骑士定位
+ * Created by Administrator on 2016/12/12.
  */
-public class MainActivity extends BaseActivity implements IMainView {
+
+public class MainActivity extends BaseActivity implements IMainView, IMainFragView {
     public static MainActivity mInstance;
-    private SectionsPagerAdapter mSectionsPagerAdapter;
-    private static ViewPager mViewPager;
-    @CodeNote(id = R.id.bottom_tv)
-    TextView bottom_tv;
-    MainListener mListener;
-    @CodeNote(id = R.id.tabs)
-    TabLayout mTabLayout;
-    MainFragment new_order;
-    MainFragment qu_huo;
-    MainFragment dai_song;
-    int position = 0;
+    @Bind(R.id.title_bar)
+    TitleBar titleBar;
+    @Bind(R.id.order_lv)
+    ListView orderLv;
+    @Bind(R.id.my_order_btn)
+    Button myOrderBtn;
+    @Bind(R.id.refresh_ll)
+    LinearLayout refresh_ll;
+    @Bind(R.id.main_srl)
+    SwipeRefreshLayout main_srl;
+    CommonAdapter<OrderModel> mAdapter;
+    List<OrderModel> mList;
+    MainFragListener listener;
+    @Bind(R.id.no_data_ll)
+    LinearLayout no_data_ll;
+    MainListener mainListener;
     //声明AMapLocationClientOption对象
     public AMapLocationClientOption mLocationOption = null;
     //声明定位回调监听器
     public AMapLocationListener mLocationListener = null;
+    @Bind(R.id.drawer_layout)
+    DrawerLayout drawer_layout;
+    @Bind(R.id.nav_view)
+    NavigationView nav_view;
+    View top_view;
+    LinearLayout user_center_ll;
+    BroadcastReceiver mItemViewListClickReceiver;
+    IntentFilter intentFilter;
+    private NotificationManager manger;
     public static final String DOWNLOAD_ID = "download_id";
-    private DownloadChangeObserver downloadObserver;
     private long lastDownloadId = 0;
     public static final Uri CONTENT_URI = Uri.parse("content://downloads/my_downloads");
-    //    private MaterialDialog materialDialog;
-//    private String NetUrl = "http://www.dakedaojia.com/download/deliver003.apk";
-    LocalBroadcastManager broadcastManager;
-    boolean resu = true;
+    private MainActivity.DownloadChangeObserver downloadObserver;
 
     @Override
     public void initViews() {
-        setContentView(R.layout.activity_main);
-        mListener = new MainListener(this);
+        setContentView(R.layout.ac_total_main);
+        ButterKnife.bind(this);
         mInstance = this;
-        new_order = new MainFragment();
-        qu_huo = new MainFragment();
-        dai_song = new MainFragment();
-        //初始化AMapLocationClientOption对象
-        mLocationOption = new AMapLocationClientOption();
-        //这里以ACCESS_COARSE_LOCATION为例
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
-            //申请WRITE_EXTERNAL_STORAGE权限
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-                    0);//自定义的code
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 0);//自定义的code
         }
-        //设置定位模式为AMapLocationMode.Hight_Accuracy，高精度模式。
+        top_view = nav_view.getHeaderView(0);
+        LinearLayout btn = (LinearLayout) top_view.findViewById(R.id.auc_ll7);
+        btn.setOnClickListener(v -> {
+            android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(this);
+            builder.setTitle("提示");
+            builder.setMessage("确定要退出当前账号？");
+            builder.setNegativeButton("确定", (dialog, which) -> {
+                Utils.putCache(Config.user_id, "");
+                if (broadcastManager != null) {
+                    broadcastManager.unregisterReceiver(mItemViewListClickReceiver);
+                }
+                finish();
+            });
+            builder.setPositiveButton("取消", null);
+            builder.show();
+        });
+        LinearLayout auc_ll1 = (LinearLayout) top_view.findViewById(R.id.auc_ll1);
+        auc_ll1.setOnClickListener(v -> Utils.IntentPost(SHDetailActivity.class));
+        LinearLayout auc_ll3 = (LinearLayout) top_view.findViewById(R.id.auc_ll3);
+        auc_ll3.setOnClickListener(v -> Utils.IntentPost(JvBaoActivity.class));
+        LinearLayout auc_ll2 = (LinearLayout) top_view.findViewById(R.id.auc_ll2);//规则
+        auc_ll2.setOnClickListener(v -> Utils.IntentPost(WebActivity.class, intent -> intent.putExtra("web", "规则")));
+        LinearLayout auc_ll6 = (LinearLayout) top_view.findViewById(R.id.auc_ll6);//关于
+        auc_ll6.setOnClickListener(v -> Utils.IntentPost(WebActivity.class, intent -> intent.putExtra("web", "关于")));
+        LinearLayout auc_ll4 = (LinearLayout) top_view.findViewById(R.id.auc_ll4);
+        user_center_ll = (LinearLayout) top_view.findViewById(R.id.user_center_ll);
+        user_center_ll.setOnClickListener(view -> Utils.IntentPost(ShopInfoActivity.class, intent -> intent.putExtra("model", shopInfoModel)));
+        auc_ll4.setOnClickListener(v -> {
+            Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + "4001663779"));
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        });
+        mLocationOption = new AMapLocationClientOption();
         mLocationOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
         mLocationOption.setInterval(30000);
-        mLocationClient.setLocationOption(mLocationOption);
+        BaseApplication.mLocationClient.setLocationOption(mLocationOption);
         mLocationListener = model -> {
             Map<String, String> map_cache = new HashMap<>();
             map_cache.put("address", model.getAddress());
@@ -124,23 +176,89 @@ public class MainActivity extends BaseActivity implements IMainView {
                     });
             map_cache.put("cityName", model.getCity());
             Utils.putCache(map_cache);
-            if (model.getAddress().contains("保定市")) {
-                bottom_tv.setText("当前地址：" + model.getAddress().split("保定市")[1]);
-            }
         };
         //设置定位回调监听
-        mLocationClient.setLocationListener(mLocationListener);
-        mLocationClient.startLocation();
+        BaseApplication.mLocationClient.setLocationListener(mLocationListener);
+        BaseApplication.mLocationClient.startLocation();
+        listener = new MainFragListener(this);
+        mainListener = new MainListener(this);
+        mainListener.getUserCenter();
+        mainListener.checkVersion();//检查版本
+        builder = new AlertDialog.Builder(this);
+        myOrderBtn.setOnClickListener(v -> {
+            Utils.IntentPost(MyOrderActivity.class);
+        });
+        titleBar.setLeftClick(() -> leftManager());
+        titleBar.setRightSWClick(() -> {
+            builder.setTitle("提示");
+            builder.setMessage("确定要" + (!right_click ? "接单" : "关闭") + "吗？");
+            builder.setNegativeButton("确定", (dialog, which) -> {
+                mainListener.changeQsState(right_click);
+            });
+            builder.setPositiveButton("取消", null);
+            builder.show();
+        });
+        mAdapter = new CommonAdapter<OrderModel>(this, mList, R.layout.item_orders) {
+            @Override
+            public void convert(CommonViewHolder holder, OrderModel model, int position) {
+                holder.setText(R.id.jl1_tv, model.getJuLi());
+                holder.setText(R.id.jl2_tv, model.getSJDaoYH());
+                holder.setText(R.id.qh_tv, model.getShopname());
+                holder.setText(R.id.xx_address_tv, model.getTogoAddress());
+                holder.setText(R.id.sh_tv, model.getAddress());
+                holder.setText(R.id.fb_time_tv, model.getAddtime());
+                holder.setText(R.id.sr_tv, model.getSendFee());
+                holder.setText(R.id.remark_tv, model.getOrderAttach());
+                holder.setOnClickListener(R.id.left_btn, v -> {
+                    builder.setTitle("提示");
+                    builder.setMessage("确定要接此单？");
+                    builder.setNegativeButton("确定", (dialog, which) -> {
+                        mainListener.qiangDan("1", model.getOrderid());
+                    });
+                    builder.setPositiveButton("取消", null);
+                    builder.show();
+                });
+                holder.setOnClickListener(R.id.tel1_iv, v -> {
+                    Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + model.getPotioncomm()));
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                });
+                holder.setOnClickListener(R.id.tel2_iv, v -> {
+                    Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + model.getOrderComm()));
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                });
+            }
+        };
+        orderLv.setAdapter(mAdapter);
+        orderLv.setOnItemClickListener((parent, view, position, id) -> {
+            Utils.IntentPost(OrderDetailActivitys.class, listener -> {
+                listener.putExtra("orderid", mList.get(position).getOrderid());
+            });
+        });
+        refresh_ll.setOnClickListener(v -> {
+            if (right_click) {
+                listener.loadOrder(1, "0");
+            }
+        });
+        main_srl.setOnRefreshListener(() -> {
+                    if (right_click) {
+                        listener.loadOrder(1, "0");
+                    } else {
+                        main_srl.setRefreshing(false);
+                    }
+                }
+        );
+        listener.loadOrder(1, "0");
         broadcastManager = LocalBroadcastManager.getInstance(this);
-        IntentFilter intentFilter = new IntentFilter();
+        intentFilter = new IntentFilter();
         intentFilter.addAction("android.intent.action.CART_BROADCAST");
-        BroadcastReceiver mItemViewListClickReceiver = new BroadcastReceiver() {
+        mItemViewListClickReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 String msg = intent.getStringExtra("data");
                 if ("refresh".equals(msg)) {
-                    new_order.refreshList(0);
-                    MainActivity.refreshMain();
+                    listener.loadOrder(1, "0");
                     simpleNotify();//提示音
                 }
             }
@@ -148,7 +266,7 @@ public class MainActivity extends BaseActivity implements IMainView {
         broadcastManager.registerReceiver(mItemViewListClickReceiver, intentFilter);
     }
 
-    private NotificationManager manger;
+    ShopInfoModel shopInfoModel;
 
     private void simpleNotify() {
         if (MainActivity.mInstance != null) {
@@ -170,99 +288,101 @@ public class MainActivity extends BaseActivity implements IMainView {
         }
     }
 
-    @Override
-    public void initEvents() {
-        mListener.checkVersion();//检查版本
-        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
-        mViewPager = (ViewPager) findViewById(R.id.container);
-        mViewPager.setAdapter(mSectionsPagerAdapter);
-        mViewPager.setOffscreenPageLimit(2);
-        mTabLayout.setTabMode(TabLayout.MODE_FIXED);//设置tab模式，当前为系统默认模式
-        mTabLayout.setupWithViewPager(mViewPager);//将TabLayout和ViewPager关联起来。
-        mTabLayout.setTabsFromPagerAdapter(mSectionsPagerAdapter);//给Tabs设置适配器
-        mTabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                position = tab.getPosition();
-                switch (position) {
-                    case 0:
-                        new_order.refreshList(0);
-                        break;
-                    case 1:
-                        qu_huo.refreshList(1);
-                        break;
-                    case 2:
-                        dai_song.refreshList(2);
-                        break;
-                }
-                mViewPager.setCurrentItem(tab.getPosition()); //解决单击Tab标签无法翻页的问题
-            }
+    LocalBroadcastManager broadcastManager;
 
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-
-            }
-        });
-//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-//        fab.setOnClickListener(v -> {//刷新当前list
-//            switch (position) {
-//                case 0:
-//                    new_order.refreshList(0);
-//                    break;
-//                case 1:
-//                    qu_huo.refreshList(1);
-//                    break;
-//                case 2:
-//                    dai_song.refreshList(2);
-//                    break;
-//            }
-//        });
-//        fab.setOnLongClickListener(v -> {//跳转到个人中心页面
-//            Utils.IntentPost(UserCenterActivity.class);
-//            return false;
-//        });
+    private void leftManager() {
+        if (drawer_layout.isDrawerOpen(GravityCompat.START)) {
+            drawer_layout.closeDrawer(GravityCompat.START);
+        } else {
+            drawer_layout.openDrawer(GravityCompat.START);
+        }
     }
 
-    /**
-     * 版本检测
-     */
+    AlertDialog.Builder builder;
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case 0:
+                break;
+        }
+    }
+
+    @Override
+    public void initEvents() {
+
+    }
+
+    @Override
+    public void refreshOrder(List<OrderModel> list) {
+        main_srl.setRefreshing(false);
+        if (list != null) {
+            mAdapter.refresh(list);
+            if (list.size() > 0) {
+                no_data_ll.setVisibility(View.GONE);
+                orderLv.setVisibility(View.VISIBLE);
+                mList = list;
+            } else {
+                orderLv.setVisibility(View.GONE);
+                no_data_ll.setVisibility(View.VISIBLE);
+            }
+        } else {
+            mAdapter.refresh(new ArrayList<>());
+            orderLv.setVisibility(View.GONE);
+            no_data_ll.setVisibility(View.VISIBLE);
+        }
+    }
+
+    @Override
+    public void refresh(ListModel list) {
+
+    }
+
+    boolean right_click = true;
+
+    @Override
+    public void loadMoreOrder(List<OrderModel> list) {
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (11 == resultCode) {
+            mainListener.getUserCenter();
+        }
+    }
+
     @Override
     public void checkVersion(String url, String content) {
         if (!("").equals(content)) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(MainActivity.this);
             builder.setTitle("提示");
             builder.setMessage(content);
-            builder.setNegativeButton("确定", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    DownloadManager dowanloadmanager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-                    //2.创建下载请求对象，并且把下载的地址放进去
-                    DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
-                    //3.给下载的文件指定路径
-                    request.setDestinationInExternalFilesDir(MainActivity.this, Environment.DIRECTORY_DOWNLOADS, "weixin.apk");
-                    //4.设置显示在文件下载Notification（通知栏）中显示的文字。6.0的手机Description不显示
-                    request.setTitle("更新");
-                    request.setDescription(content);
-                    //5更改服务器返回的minetype为android包类型
-                    request.setMimeType("application/vnd.android.package-archive");
-                    //6.设置在什么连接状态下执行下载操作
-                    request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE | DownloadManager.Request.NETWORK_WIFI);
-                    //7. 设置为可被媒体扫描器找到
-                    request.allowScanningByMediaScanner();
-                    //8. 设置为可见和可管理
-                    request.setVisibleInDownloadsUi(true);
-                    lastDownloadId = dowanloadmanager.enqueue(request);
-                    //9.保存id到缓存
-                    PreferencesUtils.putLong(MainActivity.this, DOWNLOAD_ID, lastDownloadId);
-                    //10.采用内容观察者模式实现进度
-                    downloadObserver = new DownloadChangeObserver(null);
-                    getContentResolver().registerContentObserver(CONTENT_URI, true, downloadObserver);
-                }
+            builder.setNegativeButton("确定", (dialog, which) -> {
+                DownloadManager dowanloadmanager = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
+                //2.创建下载请求对象，并且把下载的地址放进去
+                DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+                //3.给下载的文件指定路径
+                request.setDestinationInExternalFilesDir(MainActivity.this, Environment.DIRECTORY_DOWNLOADS, "weixin.apk");
+                //4.设置显示在文件下载Notification（通知栏）中显示的文字。6.0的手机Description不显示
+                request.setTitle("更新");
+                request.setDescription(content);
+                //5更改服务器返回的minetype为android包类型
+                request.setMimeType("application/vnd.android.package-archive");
+                //6.设置在什么连接状态下执行下载操作
+                request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE | DownloadManager.Request.NETWORK_WIFI);
+                //7. 设置为可被媒体扫描器找到
+                request.allowScanningByMediaScanner();
+                //8. 设置为可见和可管理
+                request.setVisibleInDownloadsUi(true);
+                lastDownloadId = dowanloadmanager.enqueue(request);
+                //9.保存id到缓存
+                PreferencesUtils.putLong(MainActivity.this, DOWNLOAD_ID, lastDownloadId);
+                //10.采用内容观察者模式实现进度
+                downloadObserver = new DownloadChangeObserver(null);
+                getContentResolver().registerContentObserver(CONTENT_URI, true, downloadObserver);
             });
             builder.setPositiveButton("取消", null);
             builder.show();
@@ -271,77 +391,33 @@ public class MainActivity extends BaseActivity implements IMainView {
 
     @Override
     public void changeResult(double lat, double lng) {
-//        if (lat != 0 && lng != 0) {
-//            String la = lat + "";
-//            String ln = lng + "";
-//            if (la.contains(".")) {
-//                mAcache.put("lat", la.substring(0, 9));
-//            }
-//            if (ln.contains(".")) {
-//                mAcache.put("lon", ln.substring(0, 10));
-//            }
-//        }
+
     }
 
     @Override
     public void changeStateResult(boolean result) {
-
+        if (result) {
+            listener.loadOrder(1, "0");
+        }
     }
 
     @Override
     public void changeQsState(String result) {
-
-    }
-
-
-    @Override
-    public void userDetail(MessageModel model) {
-
-    }
-
-    public class SectionsPagerAdapter extends FragmentPagerAdapter {
-        public SectionsPagerAdapter(FragmentManager fm) {
-            super(fm);
-        }
-
-        @Override
-        public Fragment getItem(int position) {
-            switch (position) {
-                case 0:
-                    return new_order;
-                case 1:
-                    return qu_huo;
-                case 2:
-                    return dai_song;
+        if (("成功").equals(result)) {
+            right_click = !right_click;
+            no_data_ll.setVisibility(right_click ? View.GONE : View.VISIBLE);
+            orderLv.setVisibility(right_click ? View.VISIBLE : View.GONE);
+            titleBar.setRightButtonClick(right_click);
+            if (right_click) {
+                broadcastManager.registerReceiver(mItemViewListClickReceiver, intentFilter);
+            } else {
+                broadcastManager.unregisterReceiver(mItemViewListClickReceiver);
             }
-            return null;
-        }
-
-        @Override
-        public int getCount() {
-            return 3;
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position) {
-            switch (position) {
-                case 0:
-                    return "新任务";
-                case 1:
-                    return "取货中";
-                case 2:
-                    return "待送达";
-            }
-            return null;
+        } else {
+            ToastShort(result);
         }
     }
 
-    /**
-     * 刷新首页
-     */
-    public static void refreshMain() {
-        mViewPager.setCurrentItem(0);
-    }
 
     //用于显示下载进度
     class DownloadChangeObserver extends ContentObserver {
@@ -363,20 +439,35 @@ public class MainActivity extends BaseActivity implements IMainView {
                 int currentSize = cursor.getInt(currentColumn);
                 float percent = (float) currentSize / (float) totalSize;
                 int progress = Math.round(percent * 100);
-//                materialDialog.setProgress(progress);
-//                if(progress == 100) {
-//                    materialDialog.dismiss();
-//                }
             }
         }
-
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (downloadObserver != null) {
-            getContentResolver().unregisterContentObserver(downloadObserver);
+    public void userDetail(ShopInfoModel model) {
+        if (model != null) {
+            TextView user_name_tv = (TextView) top_view.findViewById(R.id.user_name_tv);
+            TextView user_tel_tv = (TextView) top_view.findViewById(R.id.user_tel_tv);
+            user_name_tv.setText(model.getTogoname());
+            user_tel_tv.setText(model.getAddress());
+            ImageView iv = (ImageView) top_view.findViewById(R.id.user_iv);
+            Glide.with(this)
+                    .load(model.getPicture())
+                    .error(R.mipmap.tag_ren)
+                    .transform(new GlideCircleTransform(this))
+                    .into(iv);
+            shopInfoModel = model;
+        }
+    }
+
+
+    @Override
+    public void orderList(ShopOrderModel orders) {
+        if (orders != null) {
+            TextView sr_tv = (TextView) top_view.findViewById(R.id.sr_tv);
+            TextView ds_tv = (TextView) top_view.findViewById(R.id.ds_tv);
+            sr_tv.setText(orders.getOrderCount());
+            ds_tv.setText(orders.getOrderTotal());
         }
     }
 }

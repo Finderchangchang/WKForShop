@@ -3,6 +3,7 @@ package wk.shop.listener;
 
 import android.widget.Toast;
 
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,7 +13,7 @@ import wk.shop.method.HttpUtil;
 import wk.shop.method.UpdateManager;
 import wk.shop.method.Utils;
 import wk.shop.model.Config;
-import wk.shop.ui.MainActivitys;
+import wk.shop.ui.MainActivity;
 import wk.shop.view.IMainView;
 
 /**
@@ -69,7 +70,7 @@ public class MainListener implements MainMView {
                         mView.changeStateResult(true);
                     } else {
                         mView.changeStateResult(false);
-                        Toast.makeText(MainActivitys.mInstance, model.getMsg(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(MainActivity.mInstance, model.getMsg(), Toast.LENGTH_SHORT).show();
                     }
                 }, error -> {
                     mView.changeStateResult(false);
@@ -116,6 +117,17 @@ public class MainListener implements MainMView {
                     mView.userDetail(model);
                 }, error -> {
                     mView.userDetail(null);
+                });
+        Map<String, String> map = new HashMap<>();
+        map.put("shopid", Utils.getCache(Config.user_id));
+        map.put("starttime", new SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date()));
+        HttpUtil.load().getOrderList(map)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(model -> {
+                    mView.orderList(model);
+                }, error -> {
+                    mView.orderList(null);
                 });
     }
 }
