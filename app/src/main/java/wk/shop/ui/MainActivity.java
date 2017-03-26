@@ -133,12 +133,10 @@ public class MainActivity extends BaseActivity implements IMainView, IMainFragVi
             builder.setPositiveButton("取消", null);
             builder.show();
         });
-        LinearLayout auc_ll1 = (LinearLayout) top_view.findViewById(R.id.auc_ll1);
-        auc_ll1.setOnClickListener(v -> Utils.IntentPost(SHDetailActivity.class));
-        LinearLayout auc_ll3 = (LinearLayout) top_view.findViewById(R.id.auc_ll3);
-        auc_ll3.setOnClickListener(v -> Utils.IntentPost(JvBaoActivity.class));
-        LinearLayout auc_ll2 = (LinearLayout) top_view.findViewById(R.id.auc_ll2);//规则
-        auc_ll2.setOnClickListener(v -> Utils.IntentPost(WebActivity.class, intent -> intent.putExtra("web", "规则")));
+        LinearLayout auc_ll3 = (LinearLayout) top_view.findViewById(R.id.auc_ll3);//菜品管理
+        auc_ll3.setOnClickListener(v -> Utils.IntentPost(MenuManageActivity.class));
+        LinearLayout auc_ll2 = (LinearLayout) top_view.findViewById(R.id.auc_ll2);//菜单分类
+        auc_ll2.setOnClickListener(v -> Utils.IntentPost(MenuTypeActivity.class));
         LinearLayout auc_ll6 = (LinearLayout) top_view.findViewById(R.id.auc_ll6);//关于
         auc_ll6.setOnClickListener(v -> Utils.IntentPost(WebActivity.class, intent -> intent.putExtra("web", "关于")));
         LinearLayout auc_ll4 = (LinearLayout) top_view.findViewById(R.id.auc_ll4);

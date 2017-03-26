@@ -69,6 +69,8 @@
         <activity android:name=".ui.AcountCenterActivity" />
         <activity android:name=".ui.HistoryActivity" />
         <activity android:name=".ui.ShopInfoActivity" />
+        <activity android:name=".ui.MenuManageActivity" />
+        <activity android:name=".ui.MenuTypeActivity" />
         <!-- 配置第三方Receiver -->
         <receiver
             android:name=".service.PushReceiver"

@@ -7,6 +7,7 @@ import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -96,8 +97,14 @@ public class CommonViewHolder {
      * @param text
      * @return
      */
+
     public CommonViewHolder setText(int viewId, Object text) {
         TextView view = getView(viewId);
+        view.setText(text + "");
+        return this;
+    }
+    public CommonViewHolder setEditText(int viewId, Object text) {
+        EditText view = getView(viewId);
         view.setText(text + "");
         return this;
     }
@@ -153,6 +160,12 @@ public class CommonViewHolder {
     //获取知道textview的值
     public String getText(int viewId) {
         TextView view = getView(viewId);
+        return view.getText().toString().trim();
+    }
+
+    //获取知道textview的值
+    public String getEditText(int viewId) {
+        EditText view = getView(viewId);
         return view.getText().toString().trim();
     }
 

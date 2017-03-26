@@ -6,11 +6,14 @@ import retrofit2.http.GET;
 import retrofit2.http.Query;
 import retrofit2.http.QueryMap;
 import rx.Observable;
+import wk.shop.model.FoodTypeModel;
 import wk.shop.model.GDToBD;
 import wk.shop.model.ListModel;
 import wk.shop.model.MessageModel;
 import wk.shop.model.NormalMessageModel;
 import wk.shop.model.OrderModel;
+import wk.shop.model.PageModel;
+import wk.shop.model.SaveModel;
 import wk.shop.model.ShopInfoModel;
 import wk.shop.model.ShopOrderModel;
 import wk.shop.model.UpdateModel;
@@ -30,6 +33,62 @@ public interface GitHubAPI {
     //获得今日订单量以及产生的总钱数
     @GET(normal_url + "GetSaleMoney.aspx")
     Observable<ShopOrderModel> getOrderList(@QueryMap Map<String, String> map);
+
+    /**
+     * 添加菜品分类
+     *
+     * @param map sortname	菜品类别名称	是
+     *            jorder	排序编号 数字
+     *            foodid	菜品类别编号	是
+     *            shopid	商家编号	是
+     * @return
+     */
+    @GET(normal_url + "addfoodsort.aspx")
+    Observable<SaveModel> addFoodSort(@QueryMap Map<String, String> map);
+
+    //删除商品 shopid,id 商品编号（多个用,分隔）
+    @GET(normal_url + "deletefood.aspx")
+    Observable<ShopOrderModel> deleteFood(@QueryMap Map<String, String> map);
+
+    //删除商品分类 shopid,id 分类编号（多个用,分隔）
+    @GET(normal_url + "deletefoodsort.aspx")
+    Observable<SaveModel> deleteFoodSort(@QueryMap Map<String, String> map);
+
+    //添加更新商品(参数有问题)
+    @GET(normal_url + "EditorFoodDetail.aspx")
+    Observable<ShopOrderModel> editFood(@QueryMap Map<String, String> map);
+
+    //提现记录
+    @GET(normal_url + "GetCashOutList.aspx")
+    Observable<ShopOrderModel> getCashOutList(@QueryMap Map<String, String> map);
+
+    //当前余额，及可提现金额
+    @GET(normal_url + "cashoutmoney.aspx")
+    Observable<ShopOrderModel> getCashoutmoney(@QueryMap Map<String, String> map);
+
+    //获得餐品详情
+    @GET(normal_url + "GetFoodDetailByFoodId.aspx")
+    Observable<ShopOrderModel> getFoodDetail(@QueryMap Map<String, String> map);
+
+    //上传商品图片
+    @GET(normal_url + "GetFoodImg.aspx")
+    Observable<ShopOrderModel> putFoodImg(@QueryMap Map<String, String> map);
+
+    //获得餐品列表
+    @GET(normal_url + "GetFoodListByShopId.aspx")
+    Observable<PageModel> getFoodListByShopId(@Query("shopid") String map);
+
+    //订单统计
+    @GET(normal_url + "DingDanTongJi.aspx")
+    Observable<ShopOrderModel> getDingDanTongJi(@QueryMap Map<String, String> map);
+
+    //根据用户ID获得订单信息
+    @GET(normal_url + "GetOrderListByUserId.aspx")
+    Observable<PageModel> getOrders(@QueryMap Map<String, String> map);
+
+    //根据商家编号获取餐品分类
+    @GET(normal_url + "GetFoodTypeListByShopId.aspx")
+    Observable<PageModel> getFoodTypeListByShopId(@Query("shopid") String map);
 
     @GET("app/shop/shoplogin.aspx")
     Observable<NormalMessageModel> userInfo(@QueryMap Map<String, String> map);
@@ -72,10 +131,6 @@ public interface GitHubAPI {
     //抢单操作
     @GET(url + "deliverreceiveorder.aspx")
     Observable<OrderModel> qiangDan(@QueryMap Map<String, String> map);
-
-    //根据用户ID获得订单信息
-    @GET(url + "GetOrderListByUserId.aspx")
-    Observable<ListModel> getOrders(@QueryMap Map<String, String> map);
 
     //根据订单编号获得订单详细信息
     @GET(url + "GetOrderDetailByOrderId.aspx")
