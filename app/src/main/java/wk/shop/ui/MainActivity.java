@@ -196,18 +196,56 @@ public class MainActivity extends BaseActivity implements IMainView, IMainFragVi
             builder.setPositiveButton("取消", null);
             builder.show();
         });
-        mAdapter = new CommonAdapter<OrderModel>(this, mList, R.layout.item_orders) {
+        mAdapter = new CommonAdapter<OrderModel>(this, mList, R.layout.item_order) {
             @Override
             public void convert(CommonViewHolder holder, OrderModel model, int position) {
-                holder.setText(R.id.jl1_tv, model.getJuLi());
-                holder.setText(R.id.jl2_tv, model.getSJDaoYH());
-                holder.setText(R.id.qh_tv, model.getShopname());
-                holder.setText(R.id.xx_address_tv, model.getTogoAddress());
-                holder.setText(R.id.sh_tv, model.getAddress());
                 holder.setText(R.id.fb_time_tv, model.getAddtime());
-                holder.setText(R.id.sr_tv, model.getSendFee());
-                holder.setText(R.id.remark_tv, model.getOrderAttach());
-                holder.setOnClickListener(R.id.left_btn, v -> {
+                holder.setText(R.id.sr_tv, model.getSendFee() + "元");
+                holder.setText(R.id.order_id_tv, model.getOrderid());
+                String state = "";
+                switch (model.getSendstate()) {
+                    case "0":
+                        if (("2").equals(model.getState())) {
+                            switch (model.getIsShopSet()) {
+                                case "0":
+                                    state = "未接单";
+                                    break;
+                                case "1":
+                                    state = "已接单";
+                                    break;
+                                default:
+                                    state = "订单已取消";
+                                    break;
+                            }
+                        } else {
+                            switch (model.getState()) {
+                                case "7":
+                                    state = "正在匹配骑手";
+                                    break;
+                                case "4":
+                                    state = "订单已取消";
+                                    break;
+                                case "3":
+                                    state = "完成订单";
+                                    break;
+                                default:
+                                    state = "位置情况的订单";
+                                    break;
+                            }
+                        }
+                        break;
+                    case "1":
+                        state = "取货中";
+                        break;
+                    case "2":
+                        state = "配送中";
+                        break;
+                    case "3":
+                        state = "已送达";
+                        break;
+                }
+                holder.setText(R.id.state_tv, state);
+                holder.setOnClickListener(R.id.get_order_btn, v -> {
                     builder.setTitle("提示");
                     builder.setMessage("确定要接此单？");
                     builder.setNegativeButton("确定", (dialog, which) -> {
@@ -215,16 +253,6 @@ public class MainActivity extends BaseActivity implements IMainView, IMainFragVi
                     });
                     builder.setPositiveButton("取消", null);
                     builder.show();
-                });
-                holder.setOnClickListener(R.id.tel1_iv, v -> {
-                    Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + model.getPotioncomm()));
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-                });
-                holder.setOnClickListener(R.id.tel2_iv, v -> {
-                    Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + model.getOrderComm()));
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
                 });
             }
         };

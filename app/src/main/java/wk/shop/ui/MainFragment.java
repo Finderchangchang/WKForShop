@@ -51,7 +51,7 @@ public class MainFragment extends Fragment implements IMainFragView {
 //                }
                 String btn_state = "";
                 String order_state = "";
-                holder.setText(R.id.remark_tv, model.getOrderAttach());
+                holder.setText(R.id.order_id_tv, model.getOrderid());
                 //配送状态：0：未配送(0页面：抢单，1页面：到商家)，1.已接单。5到商家（配送中），2：配送中（配送完成），3：配送完成， 4：配送失败
                 switch (model.getSendstate()) {
                     case "0":
@@ -92,7 +92,7 @@ public class MainFragment extends Fragment implements IMainFragView {
 //                    }
 //                });
 //                holder.setText(R.id.order_state_tv, order_state);
-                holder.setText(R.id.change_state_tv, btn_state);
+//                holder.setText(R.id.change_state_tv, btn_state);
 //                holder.setOnClickListener(R.id.tel_ll, v -> {
 //                    String tel = "";
 //                    if (tab_index == 0 || tab_index == 1) {//商家电话
@@ -110,31 +110,31 @@ public class MainFragment extends Fragment implements IMainFragView {
 //                });
 
                 //改变当前的订单状态
-                holder.setOnClickListener(R.id.order_state_ll, v -> {
-                    String now_state = "0";
-                    switch (model.getSendstate()) {
-                        case "0":
-                            now_state = "1";
-                            break;
-                        case "1":
-                            now_state = "5";
-                            break;
-                        case "5":
-                            now_state = "2";
-                            break;
-                        case "2":
-                            now_state = "3";
-                            break;
-                    }
-                    if (("1").equals(now_state)) {
-                        listener.qiangDan("1", model.getOrderid());
-                    } else if (("3").equals(now_state)) {
-                        listener.finishOrder(now_state, "1", model.getOrderid(), Utils.getCache("address")
-                                , Utils.getCache("lat"), Utils.getCache("lon"), Utils.getCache("cityName"));
-                    } else {
-                        listener.finishOrder(now_state, "1", model.getOrderid(), "", "", "", "");
-                    }
-                });
+//                holder.setOnClickListener(R.id.order_state_ll, v -> {
+//                    String now_state = "0";
+//                    switch (model.getSendstate()) {
+//                        case "0":
+//                            now_state = "1";
+//                            break;
+//                        case "1":
+//                            now_state = "5";
+//                            break;
+//                        case "5":
+//                            now_state = "2";
+//                            break;
+//                        case "2":
+//                            now_state = "3";
+//                            break;
+//                    }
+//                    if (("1").equals(now_state)) {
+//                        listener.qiangDan("1", model.getOrderid());
+//                    } else if (("3").equals(now_state)) {
+//                        listener.finishOrder(now_state, "1", model.getOrderid(), Utils.getCache("address")
+//                                , Utils.getCache("lat"), Utils.getCache("lon"), Utils.getCache("cityName"));
+//                    } else {
+//                        listener.finishOrder(now_state, "1", model.getOrderid(), "", "", "", "");
+//                    }
+//                });
             }
         };
     }

@@ -15,6 +15,8 @@ import android.widget.ListAdapter;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+
 /**
  * Created by liuliu on 2015/11/16   16:29
  *
@@ -106,6 +108,13 @@ public class CommonViewHolder {
     public CommonViewHolder setEditText(int viewId, Object text) {
         EditText view = getView(viewId);
         view.setText(text + "");
+        return this;
+    }
+    public CommonViewHolder setImg(int viewId,String url){
+        ImageView iv=getView(viewId);
+        Glide.with(mContext)
+                .load(url)
+                .into(iv);
         return this;
     }
 

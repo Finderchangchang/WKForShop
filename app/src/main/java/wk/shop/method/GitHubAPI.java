@@ -35,14 +35,13 @@ public interface GitHubAPI {
     Observable<ShopOrderModel> getOrderList(@QueryMap Map<String, String> map);
 
     /**
-     * 添加菜品分类
-     *
      * @param map sortname	菜品类别名称	是
      *            jorder	排序编号 数字
      *            foodid	菜品类别编号	是
      *            shopid	商家编号	是
      * @return
      */
+    //添加菜品分类
     @GET(normal_url + "addfoodsort.aspx")
     Observable<SaveModel> addFoodSort(@QueryMap Map<String, String> map);
 
@@ -54,7 +53,7 @@ public interface GitHubAPI {
     @GET(normal_url + "deletefoodsort.aspx")
     Observable<SaveModel> deleteFoodSort(@QueryMap Map<String, String> map);
 
-    //添加更新商品(参数有问题)
+    //添加更新商品
     @GET(normal_url + "EditorFoodDetail.aspx")
     Observable<ShopOrderModel> editFood(@QueryMap Map<String, String> map);
 
