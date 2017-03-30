@@ -20,6 +20,8 @@ import wk.shop.view.IOrderDetail;
 interface MainFragView {
     void loadOrder(int pageindex, String sendstate);
 
+    void loadOrder(int position);
+
     void qiangDan(String orderType, String orderId);
 
     void changeOrderState(String sendState, String orderType);
@@ -59,7 +61,9 @@ public class MainFragListener implements MainFragView {
         }
         map.put("cityid", Utils.getCache(Config.city_id));
         map.put("did", Utils.getCache(Config.user_id));
-        map.put("sendstate", sendstate);
+        if (!("99").equals(sendstate)) {
+            map.put("state", sendstate);
+        }
         if (!("").equals(Utils.getCache("lat"))) {
             map.put("dlat", Utils.getCache("lat") + "");
             map.put("dlng", Utils.getCache("lon") + "");
@@ -79,6 +83,60 @@ public class MainFragListener implements MainFragView {
                     mView.refreshOrder(null);
                 });
 
+    }
+
+    @Override
+    public void loadOrder(int position) {
+        Map<String, String> map = new HashMap<>();
+        map.put("pageindex", "1");
+        map.put("pagesize", "500");
+        map.put("cityid", Utils.getCache(Config.city_id));
+        map.put("did", Utils.getCache(Config.user_id));
+        if (!("").equals(Utils.getCache("lat"))) {
+            map.put("dlat", Utils.getCache("lat") + "");
+            map.put("dlng", Utils.getCache("lon") + "");
+            map.put("cityname", Utils.getCache("cityName"));
+        }
+        if (position == 1) {//今日订单
+            HttpUtil.load()
+                    .getShopCustorderList(map)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(model -> {
+                        if (model != null) {
+                            mView.refreshOrder(model.getOrderlist());
+                        } else {
+                            mView.refreshOrder(null);
+                        }
+                    }, error -> {
+                        mView.refreshOrder(null);
+                    });
+        } else {
+            map.put("state", "-1");
+            switch (position) {
+                case 3://已接订单
+                    map.put("shopState", "1");
+                    break;
+                case 4://已拒订单
+                    map.put("shopState", "2");
+                    break;
+                default://全部订单
+                    break;
+            }
+            HttpUtil.load()
+                    .getOrders(map)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(model -> {
+                        if (model != null) {
+                            mView.refreshOrder(model.getOrderlist());
+                        } else {
+                            mView.refreshOrder(null);
+                        }
+                    }, error -> {
+                        mView.refreshOrder(null);
+                    });
+        }
     }
 
     @Override

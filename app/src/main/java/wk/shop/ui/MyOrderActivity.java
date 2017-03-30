@@ -117,13 +117,13 @@ public class MyOrderActivity extends BaseActivity {
         public CharSequence getPageTitle(int position) {
             switch (position) {
                 case 0:
-                    return "待取货";
+                    return "今日订单";
                 case 1:
-                    return "配送中";
+                    return "全部订单";
                 case 2:
-                    return "已完成";
+                    return "已接订单";
                 case 3:
-                    return "已取消";
+                    return "已拒订单";
             }
             return null;
         }

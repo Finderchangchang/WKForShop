@@ -97,7 +97,7 @@ public class OrderFragment extends Fragment implements IMainFragView {
                         break;
                 }
                 holder.setText(R.id.state_tv, state);
-                holder.setVisible(R.id.get_order_btn,false);
+                holder.setVisible(R.id.get_order_btn, false);
             }
         };
     }
@@ -169,11 +169,7 @@ public class OrderFragment extends Fragment implements IMainFragView {
             listener = new MainFragListener(this);
         }
         mOrders = new ArrayList<>();
-        if (position == 2) {
-            listener.loadOrder(1, "2,5");
-        } else {
-            listener.loadOrder(1, position + "");
-        }
+        listener.loadOrder(position);
     }
 
 

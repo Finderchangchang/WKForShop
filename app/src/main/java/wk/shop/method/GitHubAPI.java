@@ -84,6 +84,9 @@ public interface GitHubAPI {
     //根据用户ID获得订单信息
     @GET(normal_url + "GetOrderListByUserId.aspx")
     Observable<PageModel> getOrders(@QueryMap Map<String, String> map);
+    //获得今日订单
+    @GET(normal_url + "GetShopCustorderList.aspx")
+    Observable<PageModel> getShopCustorderList(@QueryMap Map<String, String> map);
 
     //根据商家编号获取餐品分类
     @GET(normal_url + "GetFoodTypeListByShopId.aspx")
