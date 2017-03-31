@@ -7,12 +7,15 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.ContentObserver;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.PixelFormat;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
@@ -36,17 +39,36 @@ import android.widget.TextView;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
 import com.bumptech.glide.Glide;
+import com.lidroid.xutils.exception.HttpException;
+import com.lidroid.xutils.http.RequestParams;
+import com.lidroid.xutils.http.ResponseInfo;
+import com.lidroid.xutils.http.callback.RequestCallBack;
+import com.lidroid.xutils.http.client.HttpRequest;
+import com.lzy.okgo.OkGo;
+import com.lzy.okgo.callback.StringCallback;
 
 import net.tsz.afinal.view.TitleBar;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import cn.trinea.android.common.util.PreferencesUtils;
+import okhttp3.Call;
+import okhttp3.Response;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import wk.shop.R;
@@ -61,7 +83,6 @@ import wk.shop.method.HttpUtil;
 import wk.shop.method.Utils;
 import wk.shop.model.Config;
 import wk.shop.model.ListModel;
-import wk.shop.model.MessageModel;
 import wk.shop.model.OrderModel;
 import wk.shop.model.ShopInfoModel;
 import wk.shop.model.ShopOrderModel;
@@ -107,6 +128,7 @@ public class MainActivity extends BaseActivity implements IMainView, IMainFragVi
     private long lastDownloadId = 0;
     public static final Uri CONTENT_URI = Uri.parse("content://downloads/my_downloads");
     private MainActivity.DownloadChangeObserver downloadObserver;
+    List<File> files;
 
     @Override
     public void initViews() {
@@ -262,11 +284,11 @@ public class MainActivity extends BaseActivity implements IMainView, IMainFragVi
                 listener.putExtra("orderid", mList.get(position).getOrderid());
             });
         });
-        refresh_ll.setOnClickListener(v -> {
-            if (right_click) {
-                listener.loadOrder(1, "0");
-            }
-        });
+//        refresh_ll.setOnClickListener(v -> {
+//            if (right_click) {
+//                listener.loadOrder(1, "0");
+//            }
+//        });
         main_srl.setOnRefreshListener(() -> {
                     if (right_click) {
                         listener.loadOrder(1, "0");
@@ -290,6 +312,131 @@ public class MainActivity extends BaseActivity implements IMainView, IMainFragVi
             }
         };
         broadcastManager.registerReceiver(mItemViewListClickReceiver, intentFilter);
+
+        refresh_ll.setOnClickListener(v -> {
+            files = new ArrayList<File>();
+            files.add(new File("/storage/emulated/0/Pictures/JPEG_20170331_092057.jpg"));
+            OkGo.post("http://s-352911.gotocdn.com/APP/shop/androidupload.ashx")//
+                    .tag(this)//
+                    .headers("type","2")
+                    .headers("id","5")
+                    .headers("ext","jpg")
+                    .params("file1", new File("/storage/emulated/0/Pictures/JPEG_20170331_092057.jpg"))    // 这里支持一个key传多个文件
+                    .execute(new StringCallback() {
+                        @Override
+                        public void onSuccess(String s, Call call, Response response) {
+                            //上传成功
+                            String a = "";
+                        }
+
+
+                        @Override
+                        public void upProgress(long currentSize, long totalSize, float progress, long networkSpeed) {
+                            //这里回调上传进度(该回调在主线程,可以直接更新ui)
+                        }
+                    });
+//            Thread thread = new Thread(() -> {
+//                communication01("http://s-352911.gotocdn.com/APP/shop/androidupload.ashx");
+//            });
+//            thread.start();
+        });
+
+    }
+    String foodId = "5";
+    Bitmap bitmap;
+
+    // Drawable转换成Bitmap
+    public Bitmap drawable2Bitmap(Drawable drawable) {
+        Bitmap bitmap = Bitmap
+                .createBitmap(
+                        drawable.getIntrinsicWidth(),
+                        drawable.getIntrinsicHeight(),
+                        drawable.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888
+                                : Bitmap.Config.RGB_565);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, drawable.getIntrinsicWidth(),
+                drawable.getIntrinsicHeight());
+        drawable.draw(canvas);
+        return bitmap;
+    }
+
+    // Drawable转换成byte[]
+    public byte[] Drawable2Bytes(Drawable d) {
+        Bitmap bitmap = this.drawable2Bitmap(d);
+        return this.Bitmap2Bytes(bitmap);
+    }
+
+    // Bitmap转换成byte[]
+    byte[] bytes;
+
+    public byte[] Bitmap2Bytes(Bitmap bm) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bm.compress(Bitmap.CompressFormat.PNG, 100, baos);
+        return baos.toByteArray();
+    }
+
+    public String communication01(String urlString) {
+        Drawable drawable = getResources().getDrawable(R.mipmap.ac_weixin);
+//        bitmap=drawable2Bitmap(drawable);
+        bytes = Drawable2Bytes(drawable);
+        HashMap<String, String> localHashMap = new HashMap<String, String>();
+        // / type=1 表示上传商家图片 id 表示商家编号
+        // / type=2 表示上传菜品图片 id 表示菜品编号
+        // / ext=jpg 表示后缀名
+        localHashMap.put("id", String.valueOf(foodId));
+        localHashMap.put("type", "2");
+        localHashMap.put("ext", "jpg");
+        String result = "";
+
+        String end = "\r\n";
+        if (!urlString.equals("")) {
+            try {
+                URL url = new URL(urlString);
+                HttpURLConnection conn = (HttpURLConnection) url
+                        .openConnection();
+                conn.setDoInput(true);// 允许输入
+                conn.setDoOutput(true);// 允许输出
+                conn.setUseCaches(false);// 不使用Cache
+                conn.setConnectTimeout(6000);// 6秒钟连接超时
+                conn.setReadTimeout(6000);// 6秒钟读数据超时
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Connection", "Keep-Alive");
+                conn.setRequestProperty("Charset", "UTF-8");
+                //StringBuilder localStringBuilder1 = new StringBuilder();
+                Iterator localIterator = localHashMap.entrySet().iterator();
+
+                while (true) {
+                    if (!localIterator.hasNext()) {
+                        break;
+                    }
+
+                    Map.Entry localEntry = (Map.Entry) localIterator.next();
+                    conn.setRequestProperty((String) localEntry.getKey(), URLEncoder.encode((String) localEntry.getValue(),
+                            "UTF-8"));
+                }
+                /*
+                 * conn.setRequestProperty("id", "1");
+				 * conn.setRequestProperty("type", "1");
+				 * conn.setRequestProperty("ext", "jpg");
+				 */
+                // / type=1 表示上传商家图片 id 表示商家编号
+                // / type=2 表示上传菜品图片 id 表示菜品编号
+                // / ext=jpg 表示后缀名
+                DataOutputStream dos = new DataOutputStream(
+                        conn.getOutputStream());
+                dos.write(bytes, 0, bytes.length);
+                dos.writeBytes(end);
+                dos.flush();
+                InputStream is = conn.getInputStream();
+                InputStreamReader isr = new InputStreamReader(is, "utf-8");
+                BufferedReader br = new BufferedReader(isr);
+                result = br.readLine();
+                String s = "";
+            } catch (Exception e) {
+                result = "{\"ret\":\"898\"}";
+            }
+        }
+        return result;
     }
 
     ShopInfoModel shopInfoModel;

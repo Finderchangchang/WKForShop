@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.Vibrator;
 
 import com.amap.api.location.AMapLocationClient;
+import com.lzy.okgo.OkGo;
 
 import wk.shop.model.NormalMessageModel;
 
@@ -19,6 +20,7 @@ public class BaseApplication extends Application {
     public void onCreate() {
         super.onCreate();
         context = getApplicationContext();
+        OkGo.init(this);
         //初始化定位
         mLocationClient = new AMapLocationClient(getApplicationContext());
 //        CrashReport.initCrashReport(getApplicationContext(), "74855b3e1f", false);
