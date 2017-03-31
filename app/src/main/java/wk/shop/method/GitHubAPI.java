@@ -47,7 +47,7 @@ public interface GitHubAPI {
 
     //删除商品 shopid,id 商品编号（多个用,分隔）
     @GET(normal_url + "deletefood.aspx")
-    Observable<ShopOrderModel> deleteFood(@QueryMap Map<String, String> map);
+    Observable<SaveModel> deleteFood(@QueryMap Map<String, String> map);
 
     //删除商品分类 shopid,id 分类编号（多个用,分隔）
     @GET(normal_url + "deletefoodsort.aspx")
@@ -55,7 +55,7 @@ public interface GitHubAPI {
 
     //添加更新商品
     @GET(normal_url + "EditorFoodDetail.aspx")
-    Observable<ShopOrderModel> editFood(@QueryMap Map<String, String> map);
+    Observable<SaveModel> editFood(@Query("ordermodel")String map);
 
     //提现记录
     @GET(normal_url + "GetCashOutList.aspx")
@@ -71,7 +71,7 @@ public interface GitHubAPI {
 
     //上传商品图片
     @GET(normal_url + "GetFoodImg.aspx")
-    Observable<ShopOrderModel> putFoodImg(@QueryMap Map<String, String> map);
+    Observable<PageModel> putFoodImg(@QueryMap Map<String, String> map);
 
     //获得餐品列表
     @GET(normal_url + "GetFoodListByShopId.aspx")

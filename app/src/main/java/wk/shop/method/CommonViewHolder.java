@@ -102,19 +102,24 @@ public class CommonViewHolder {
 
     public CommonViewHolder setText(int viewId, Object text) {
         TextView view = getView(viewId);
-        view.setText(text + "");
+        if (text != null)
+            view.setText(text + "");
         return this;
     }
+
     public CommonViewHolder setEditText(int viewId, Object text) {
         EditText view = getView(viewId);
-        view.setText(text + "");
+        if (text != null)
+            view.setText(text + "");
         return this;
     }
-    public CommonViewHolder setImg(int viewId,String url){
-        ImageView iv=getView(viewId);
-        Glide.with(mContext)
-                .load(url)
-                .into(iv);
+
+    public CommonViewHolder setImg(int viewId, String url) {
+        ImageView iv = getView(viewId);
+        if (url != null)
+            Glide.with(mContext)
+                    .load(url)
+                    .into(iv);
         return this;
     }
 

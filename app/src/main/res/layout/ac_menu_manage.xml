@@ -15,5 +15,15 @@
     <ListView
         android:id="@+id/main_lv"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <Button
+        android:id="@+id/add_menu_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorPrimary"
+        android:text="添加菜品"
+        android:textColor="@android:color/white"
+        android:textSize="16sp" />
 </LinearLayout>
