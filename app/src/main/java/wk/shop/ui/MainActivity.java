@@ -316,12 +316,14 @@ public class MainActivity extends BaseActivity implements IMainView, IMainFragVi
         refresh_ll.setOnClickListener(v -> {
             files = new ArrayList<File>();
             files.add(new File("/storage/emulated/0/Pictures/JPEG_20170331_092057.jpg"));
-            OkGo.post("http://s-352911.gotocdn.com/APP/shop/androidupload.ashx")//
+            File file = new File("/storage/emulated/0/Pictures/Screenshots/Screenshot_2017-01-22-10-56-13.png");
+            long inn = file.length();
+            /*OkGo.post("http://s-352911.gotocdn.com/APP/shop/androidupload.ashx")//
                     .tag(this)//
-                    .headers("type","2")
-                    .headers("id","5")
-                    .headers("ext","jpg")
-                    .params("file1", new File("/storage/emulated/0/Pictures/JPEG_20170331_092057.jpg"))    // 这里支持一个key传多个文件
+                    .headers("type", "2")
+                    .headers("id", "5")
+                    .headers("ext", "png")
+                    .params("file1", file)    // 这里支持一个key传多个文件
                     .execute(new StringCallback() {
                         @Override
                         public void onSuccess(String s, Call call, Response response) {
@@ -334,6 +336,28 @@ public class MainActivity extends BaseActivity implements IMainView, IMainFragVi
                         public void upProgress(long currentSize, long totalSize, float progress, long networkSpeed) {
                             //这里回调上传进度(该回调在主线程,可以直接更新ui)
                         }
+                    });*/
+            OkGo.post("http://s-352911.gotocdn.com/APP/shop/GetFoodImg.aspx")//
+                    .tag(this)//
+                    .params("userid", "5")
+                    .params("file1", file)    // 这里支持一个key传多个文件
+                    .execute(new StringCallback() {
+                        @Override
+                        public void onSuccess(String s, Call call, Response response) {
+                            //上传成功
+                            String a = "";
+                        }
+
+
+                        @Override
+                        public void upProgress(long currentSize, long totalSize, float progress, long networkSpeed) {
+                            //这里回调上传进度(该回调在主线程,可以直接更新ui)
+                        }
+
+                        @Override
+                        public void onError(Call call, Response response, Exception e) {
+                            super.onError(call, response, e);
+                        }
                     });
 //            Thread thread = new Thread(() -> {
 //                communication01("http://s-352911.gotocdn.com/APP/shop/androidupload.ashx");
@@ -342,6 +366,7 @@ public class MainActivity extends BaseActivity implements IMainView, IMainFragVi
         });
 
     }
+
     String foodId = "5";
     Bitmap bitmap;
 
