@@ -14,6 +14,8 @@ import android.widget.Button;
 import android.widget.ListView;
 
 import com.google.gson.Gson;
+import com.lzy.okgo.OkGo;
+import com.lzy.okgo.callback.StringCallback;
 
 import net.tsz.afinal.view.TitleBar;
 
@@ -30,6 +32,8 @@ import java.util.Map;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import me.iwf.photopicker.PhotoPicker;
+import okhttp3.Call;
+import okhttp3.Response;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import wk.shop.R;
@@ -143,9 +147,9 @@ public class MenuManageActivity extends BaseActivity {
                         } else {
                             menuModel.setFullPrice(0);
                         }
-                        if(!TextUtils.isEmpty(holder.getText(R.id.sort_id_tv))) {
+                        if (!TextUtils.isEmpty(holder.getText(R.id.sort_id_tv))) {
                             menuModel.setOrderNum(Integer.parseInt(holder.getText(R.id.sort_id_tv)));
-                        }else{
+                        } else {
                             menuModel.setOrderNum(0);
                         }
                         menuModel.setFoodName(holder.getText(R.id.name_tv));
@@ -190,9 +194,7 @@ public class MenuManageActivity extends BaseActivity {
                                     } else {
                                         ToastShort("请检查网络连接");
                                     }
-                                }, error -> {
-                                    ToastShort("请检查网络连接");
-                                });
+                                }, error -> ToastShort("请检查网络连接"));
                     });
                 }
             }
@@ -202,60 +204,47 @@ public class MenuManageActivity extends BaseActivity {
 
     String path;//当前选择的图片路径
     CommonAdapter<FoodModel> commonAdapter;
-    Bitmap bitmap;//当前选择的图片
-
-    /**
-     * 获得指定文件的byte数组
-     */
-    private byte[] getBytes(String filePath) {
-        byte[] buffer = null;
-        try {
-            File file = new File(filePath);
-            FileInputStream fis = new FileInputStream(file);
-            ByteArrayOutputStream bos = new ByteArrayOutputStream(1000);
-            byte[] b = new byte[1000];
-            int n;
-            while ((n = fis.read(b)) != -1) {
-                bos.write(b, 0, n);
-            }
-            fis.close();
-            bos.close();
-            buffer = bos.toByteArray();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return buffer;
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
         if (resultCode == RESULT_OK && requestCode == PhotoPicker.REQUEST_CODE) {
             if (data != null) {
                 ArrayList<String> photos =
                         data.getStringArrayListExtra(PhotoPicker.KEY_SELECTED_PHOTOS);
                 path = photos.get(0);
-                Map<String, String> map = new HashMap<>();
-                map.put("userid", food_id);
-                map.put("icon", getBytes(path).toString());
-                HttpUtil.load()
-                        .putFoodImg(map)
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(model -> {
-                            if (model != null) {
-
-                            } else {
-                                ToastShort("请检查网络连接");
-                            }
-                        }, error -> {
-                            ToastShort("请检查网络连接");
-                        });
-                //ivHeader.setImageBitmap(Utils.getBitmapByFile(photos.get(0)));
+                if (click_position > 0) {
+                    putImg();
+                }
             }
+        }
+    }
+
+    void putImg() {
+        File file = new File(path);
+        if (file.length() > 0) {
+            OkGo.post("http://s-352911.gotocdn.com/APP/shop/GetFoodImg.aspx")//
+                    .tag(this)
+                    .params("userid", foodtypes.get(click_position).getFoodID())
+                    .params("file1", file)    // 这里支持一个key传多个文件
+                    .execute(new StringCallback() {
+                        @Override
+                        public void onSuccess(String s, Call call, Response response) {
+                            //上传成功
+                            String a = "";
+                        }
+
+
+                        @Override
+                        public void upProgress(long currentSize, long totalSize, float progress, long networkSpeed) {
+                            //这里回调上传进度(该回调在主线程,可以直接更新ui)
+                        }
+
+                        @Override
+                        public void onError(Call call, Response response, Exception e) {
+                            super.onError(call, response, e);
+                        }
+                    });
         }
     }
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="100dp"
+    android:layout_height="130dp"
     android:descendantFocusability="beforeDescendants"
     android:gravity="center"
     android:orientation="horizontal">
@@ -13,7 +13,7 @@
         android:layout_marginLeft="20dp"
         android:src="@mipmap/ic_launcher" />
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
@@ -22,44 +22,21 @@
 
         <EditText
             android:id="@+id/name_tv"
-            android:layout_width="wrap_content"
-            android:layout_height="50dp"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true"
-            android:layout_marginTop="5dp"
-            android:hint="菜品名称" />
-
-        <TextView
-            android:id="@+id/menu_type_tv"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentRight="true"
-            android:layout_alignTop="@+id/name_tv"
-            android:layout_marginLeft="10dp"
-            android:layout_toEndOf="@+id/price_ll"
-            android:layout_toRightOf="@+id/price_ll"
-            android:gravity="center_vertical"
-            android:hint="选择分类"
-            android:inputType="number"
-            android:textSize="17sp" />
+            android:layout_height="40dp"
+            android:hint="菜品名称" />
 
         <LinearLayout
             android:id="@+id/price_ll"
-            android:layout_width="100dp"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_below="@+id/name_tv"
-            android:layout_marginTop="5dp"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
             android:orientation="horizontal">
 
             <EditText
                 android:id="@+id/price_tv"
                 android:layout_width="0dp"
-                android:layout_weight="1"
                 android:layout_height="wrap_content"
+                android:layout_weight="0.8"
                 android:hint="价格" />
 
             <TextView
@@ -67,19 +44,42 @@
                 android:layout_height="wrap_content"
                 android:text="元"
                 android:textSize="18sp" />
+
+            <EditText
+                android:id="@+id/sort_id_tv"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="排序编码"
+                android:inputType="number" />
         </LinearLayout>
 
-        <EditText
-            android:id="@+id/sort_id_tv"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignBaseline="@+id/price_ll"
-            android:layout_alignBottom="@+id/price_ll"
-            android:layout_alignLeft="@+id/price_ll"
-            android:layout_alignStart="@+id/menu_type_tv"
-            android:hint="排序编码"
-            android:inputType="number" />
-    </RelativeLayout>
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/menu_package_price_et"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:hint="打包费"
+                android:inputType="number"
+                android:textSize="17sp" />
+
+            <TextView
+                android:id="@+id/menu_type_tv"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:hint="选择分类"
+                android:inputType="number"
+                android:textSize="17sp" />
+        </LinearLayout>
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="wrap_content"
