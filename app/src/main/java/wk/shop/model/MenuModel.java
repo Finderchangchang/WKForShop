@@ -71,6 +71,7 @@ public class MenuModel {
     /// 打包费
     /// </summary>
     public double FullPrice;
+    public double FPrice;
     /// <summary>
     ///  剩余数量
     /// </summary>
@@ -93,6 +94,14 @@ public class MenuModel {
     /// 类型
     /// </summary>
     public int FoodType;
+
+    public double getFPrice() {
+        return FPrice;
+    }
+
+    public void setFPrice(double FPrice) {
+        this.FPrice = FPrice;
+    }
 
     public String getOpenTime() {
         return OpenTime;

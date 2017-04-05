@@ -43,6 +43,15 @@ public class FoodModel {
     private String Remains;
     private String FoodType;
     private List<FoodstylelistBean> foodstylelist;
+    String Price;
+
+    public String getPrice() {
+        return Price;
+    }
+
+    public void setPrice(String price) {
+        Price = price;
+    }
 
     public String getFoodID() {
         return FoodID;

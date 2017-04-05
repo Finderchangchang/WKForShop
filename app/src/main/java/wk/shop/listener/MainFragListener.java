@@ -79,10 +79,7 @@ public class MainFragListener implements MainFragView {
                     } else {
                         mView.refreshOrder(null);
                     }
-                }, error -> {
-                    mView.refreshOrder(null);
-                });
-
+                }, error -> mView.refreshOrder(null));
     }
 
     @Override

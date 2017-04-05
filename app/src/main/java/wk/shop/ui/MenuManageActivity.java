@@ -41,6 +41,8 @@ import wk.shop.base.BaseActivity;
 import wk.shop.method.CommonAdapter;
 import wk.shop.method.CommonViewHolder;
 import wk.shop.method.HttpUtil;
+import wk.shop.method.JsonCallback;
+import wk.shop.method.LzyResponse;
 import wk.shop.method.Utils;
 import wk.shop.model.Config;
 import wk.shop.model.FoodModel;
@@ -61,8 +63,6 @@ public class MenuManageActivity extends BaseActivity {
     @Bind(R.id.main_lv)
     ListView mainLv;
     String food_id;//餐品号
-    @Bind(R.id.add_menu_btn)
-    Button addMenuBtn;
     AlertDialog.Builder builder;
     String[] items;
     int click_position;
@@ -98,9 +98,13 @@ public class MenuManageActivity extends BaseActivity {
                 if (foodTypeModel != null) {
                     holder.setEditText(R.id.name_tv, foodTypeModel.getName());
                     holder.setText(R.id.menu_type_tv, foodTypeModel.getIntro());
-                    holder.setEditText(R.id.price_tv, foodTypeModel.getFullPrice());
+                    List<FoodModel.FoodstylelistBean> foodstylelistBean = foodTypeModel.getFoodstylelist();
+                    if (foodstylelistBean != null && foodstylelistBean.size() > 0) {
+                        holder.setEditText(R.id.price_tv, foodstylelistBean.get(0).getPrice());
+                    }
                     holder.setEditText(R.id.sort_id_tv, foodTypeModel.getSortNum());
                     holder.setImg(R.id.cai_iv, foodTypeModel.getIcon());
+                    holder.setText(R.id.menu_package_price_et, foodTypeModel.getFullPrice());
                     holder.setOnClickListener(R.id.cai_iv, v -> {
                         PhotoPicker.builder()
                                 .setPhotoCount(1)
@@ -109,24 +113,23 @@ public class MenuManageActivity extends BaseActivity {
                                 .setPreviewEnabled(false)
                                 .start(MenuManageActivity.this, PhotoPicker.REQUEST_CODE);
                         food_id = foodTypeModel.getFoodID();
-
+                        click_position = position;
                     });
                     holder.setOnClickListener(R.id.menu_type_tv, v -> {
                         click_position = position;
                         builder.setTitle("请选择菜品类型");
                         builder.setItems(items, (dialog, which) -> {
-                            ToastShort(which + "");
                             tag_click[click_position] = which;
                             FoodModel foodModel = foodtypes.get(click_position);
                             foodModel.setIntro(items[which]);
-                            //foodtypes.remove(click_position);
-                            //foodtypes.add(click_position, foodModel);
+                            foodModel.setFoodType(foodTypeModels.get(which).getSortID());
                             commonAdapter.refresh(foodtypes);
                         });
                         builder.show();
                     });
-                    click_position = position;
+
                     holder.setOnClickListener(R.id.add_btn, view -> {
+                        click_position = position;
                         /**
                          * {FPMaster:1,--shopid
                          * FullPrice:10,--菜品价格
@@ -143,7 +146,13 @@ public class MenuManageActivity extends BaseActivity {
                         menuModel.setFPMaster(Integer.parseInt(Utils.getCache(Config.user_id)));
                         String price = holder.getText(R.id.price_tv);
                         if (!TextUtils.isEmpty(price)) {
-                            menuModel.setFullPrice(Double.parseDouble(price));
+                            menuModel.setFPrice(Double.parseDouble(price));
+                        } else {
+                            menuModel.setFPrice(0);
+                        }
+                        String packagePrice = holder.getText(R.id.menu_package_price_et);//打包费
+                        if (!TextUtils.isEmpty(packagePrice)) {
+                            menuModel.setFullPrice(Double.parseDouble(packagePrice));
                         } else {
                             menuModel.setFullPrice(0);
                         }
@@ -153,7 +162,7 @@ public class MenuManageActivity extends BaseActivity {
                             menuModel.setOrderNum(0);
                         }
                         menuModel.setFoodName(holder.getText(R.id.name_tv));
-                        menuModel.setFoodType(Integer.parseInt(foodTypeModels.get(tag_click[click_position]).getSortID()));
+                        menuModel.setFoodType(Integer.parseInt(foodtypes.get(click_position).getFoodType()));
                         menuModel.setFoodNamePy("1");
                         menuModel.setTaste("1");
                         String order = new Gson().toJson(menuModel);
@@ -215,6 +224,10 @@ public class MenuManageActivity extends BaseActivity {
                 path = photos.get(0);
                 if (click_position > 0) {
                     putImg();
+                } else {
+                    FoodModel foodModel = foodtypes.get(click_position);
+                    foodModel.setIcon(path);
+                    commonAdapter.refresh(foodtypes);
                 }
             }
         }
@@ -227,17 +240,19 @@ public class MenuManageActivity extends BaseActivity {
                     .tag(this)
                     .params("userid", foodtypes.get(click_position).getFoodID())
                     .params("file1", file)    // 这里支持一个key传多个文件
-                    .execute(new StringCallback() {
-                        @Override
-                        public void onSuccess(String s, Call call, Response response) {
-                            //上传成功
-                            String a = "";
-                        }
-
-
+                    .execute(new JsonCallback<LzyResponse<String>>() {
                         @Override
                         public void upProgress(long currentSize, long totalSize, float progress, long networkSpeed) {
                             //这里回调上传进度(该回调在主线程,可以直接更新ui)
+                        }
+
+                        @Override
+                        public void onSuccess(LzyResponse<String> stringLzyResponse, Call call, Response response) {
+                            if (("ok").equals(stringLzyResponse.getState())) {
+                                FoodModel foodModel = foodtypes.get(click_position);
+                                foodModel.setIcon(stringLzyResponse.getPic());
+                                commonAdapter.refresh(foodtypes);
+                            }
                         }
 
                         @Override
